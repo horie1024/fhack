@@ -1,49 +1,57 @@
 package main
 
 import (
+	"../lib/iqon"
+	"../lib/place"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"net/http/fcgi"
 )
 
-type IQON struct {
-	Info    info
-	Results []results
-}
-
-type info struct {
-	Total        int
-	Return_count int
-	Offset       int
-	Page         int
-	Total_page   int
-}
-
-type results struct {
-	Title string
+type Response struct {
+	Iqon  iqon.IQON
+	Place []place.PlaceArray
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
 
-	resp, _ := http.Get("http://api.thefashionhack.com/item/?category_id1=10&page=1&limit=1&score_sort=1&instock_flag=1")
-	defer resp.Body.Close()
+	lat := r.URL.Query().Get("lat")
+	lng := r.URL.Query().Get("lng")
 
-	byteArray, _ := ioutil.ReadAll(resp.Body)
+	//35.658643,139.7006439
 
-	var f IQON
-	err := json.Unmarshal(byteArray, &f)
-	if err != nil {
-		log.Fatal(err)
+	fmt.Println(lat)
+	fmt.Println(lng)
+
+	f := iqon.FetchIQON()
+
+	//fmt.Println(f)
+
+	loc := place.LOC{
+		Lat: lat,
+		Lng: lng,
 	}
 
-	data, err := json.Marshal(f)
+	// 現在位置と店舗の位置を計算する
+	placeArray := place.Calc(place.FetchPlace(f, loc), loc)
+
+	data := Response{
+		Iqon:  f,
+		Place: placeArray,
+	}
+
+	fmt.Println(data)
+
+	response, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal("josn encode error")
+	}
 
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
-	fmt.Fprint(w, string(data))
+	fmt.Fprint(w, string(response))
 }
 
 func main() {
@@ -51,6 +59,7 @@ func main() {
 	l, _ := net.Listen("tcp", ":9000")
 
 	http.HandleFunc("/api", Index)
+	//http.HandleFunc("/") 送られてきた位置情報とredisにある位置情報を比較
 
 	fcgi.Serve(l, nil)
 }
