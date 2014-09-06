@@ -13,7 +13,7 @@ import (
 
 type Response struct {
 	Iqon  iqon.IQON
-	Place []place.PlaceArray
+	Place []place.PlaceData
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {
@@ -36,11 +36,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 現在位置と店舗の位置を計算する
-	placeArray := place.Calc(place.FetchPlace(f, loc), loc)
+	placeDataArray := place.Calc(place.FetchPlace(f, loc), loc)
 
 	data := Response{
 		Iqon:  f,
-		Place: placeArray,
+		Place: placeDataArray,
 	}
 
 	fmt.Println(data)

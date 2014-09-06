@@ -12,14 +12,21 @@ import (
 	"strconv"
 )
 
-type PlaceArray struct {
-	Results results
-	Flag    bool
+type PlaceDataArray struct {
+	PlaceData PlaceData
 }
 
 type LOC struct {
 	Lat string
 	Lng string
+}
+
+type PlaceData struct {
+	Geometry Geometry
+	Name     string
+	Types    []string
+	Place_id string
+	Flag     bool
 }
 
 type Place struct {
@@ -95,9 +102,9 @@ func FetchPlace(iqon iqon.IQON, loc LOC) []results {
 	return d
 }
 
-func Calc(p []results, loc LOC) []PlaceArray {
+func Calc(p []results, loc LOC) []PlaceData {
 
-	var distanceArray []PlaceArray
+	var distanceArray []PlaceData
 
 	for i, j := range p {
 
@@ -118,17 +125,33 @@ func Calc(p []results, loc LOC) []PlaceArray {
 		distance := a * 1000
 		if distance <= 50 {
 
-			b := PlaceArray{
-				Results: p[i],
-				Flag:    true,
+			b := PlaceData{
+				Name:     p[i].Name,
+				Types:    p[i].Types,
+				Place_id: p[i].Place_id,
+				Geometry: Geometry{
+					Location{
+						Lat: p[i].Geometry.Location.Lat,
+						Lng: p[i].Geometry.Location.Lng,
+					},
+				},
+				Flag: true,
 			}
 
 			distanceArray = append(distanceArray, b)
 		} else {
 
-			b := PlaceArray{
-				Results: p[i],
-				Flag:    false,
+			b := PlaceData{
+				Name:     p[i].Name,
+				Types:    p[i].Types,
+				Place_id: p[i].Place_id,
+				Geometry: Geometry{
+					Location{
+						Lat: p[i].Geometry.Location.Lat,
+						Lng: p[i].Geometry.Location.Lng,
+					},
+				},
+				Flag: false,
 			}
 
 			distanceArray = append(distanceArray, b)
